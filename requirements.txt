@@ -1,0 +1,29 @@
+# Core data
+pandas==3.0.5
+numpy==2.5.2
+
+# Visualization (used in notebooks)
+matplotlib==3.11.1
+seaborn==0.13.2
+
+# ML / NLP
+transformers==5.15.0
+torch==2.13.0
+sentence-transformers==6.0.0
+tqdm==4.70.0
+
+# LangChain stack
+langchain-community==0.4.2
+langchain-huggingface==1.2.2
+langchain-text-splitters==1.1.2
+langchain-chroma==1.1.0
+
+# Vector store
+chromadb==1.5.9
+
+# Gradio UI
+gradio==6.24.0
+
+# Utilities
+python-dotenv==1.2.3
+kagglehub==1.0.2
