@@ -4,7 +4,7 @@
 
 *Find your next favourite read — just describe what you're in the mood for.*
 
-[![Python](https://img.shields.io/badge/Python-3.11%2B-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://www.python.org/)
+[![Python](https://img.shields.io/badge/Python-3.10%2B-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://www.python.org/)
 [![Gradio](https://img.shields.io/badge/Gradio-6.24-FF7C00?style=for-the-badge&logo=gradio&logoColor=white)](https://www.gradio.app/)
 [![HuggingFace](https://img.shields.io/badge/HuggingFace-Transformers-FFD21E?style=for-the-badge&logo=huggingface&logoColor=black)](https://huggingface.co/)
 [![ChromaDB](https://img.shields.io/badge/Vector_Store-ChromaDB-6B3FA0?style=for-the-badge)](https://www.trychroma.com/)
@@ -20,48 +20,44 @@
 
 ## ✨ What it Does
 
-Type something like *"a dark psychological thriller with an unreliable narrator"* or *"a heartwarming story about family and belonging"* — and get up to 16 book recommendations that match the **meaning** of your words, not just the keywords.
+Type something like *"a dark psychological thriller with an unreliable narrator"* or *"a heartwarming story about family and belonging"* — and get 16 book recommendations that match the **meaning** of your words, not just the keywords.
 
-On top of that, you can refine results by:
+On top of that, you can narrow results by:
 
-| Option | Choices | Effect |
-|--------|---------|--------|
-| 📂 **Category** | All · Fiction · Nonfiction · Children's Fiction · Children's Nonfiction | Filters results to the chosen category |
-| 🎭 **Emotional Tone** | All · 😊 Happy · 😮 Surprising · 😠 Angry · 😨 Suspenseful · 😢 Sad | Re-ranks results by the matching emotion score (joy · surprise · anger · fear · sadness) |
+| Filter | Options |
+|--------|---------|
+| 📂 **Category** | All · Fiction · Nonfiction · Children's Fiction · Children's Nonfiction |
+| 🎭 **Emotional Tone** | All · 😊 Happy · 😢 Sad · 😮 Surprising · 😨 Suspenseful · 😠 Angry |
 
 ---
 
 ## 🧠 How it Works
 
-The notebooks enrich the book dataset offline; the Gradio app then uses the enriched data to serve recommendations:
+The system runs a three-stage AI pipeline to enrich the book dataset before serving recommendations:
 
 ```
 Raw Dataset (Kaggle)
       │
       ▼
 ┌─────────────────────────┐
-│  1. Data Cleaning       │  Drop books with missing fields or
-│                         │  descriptions under 25 words
-└──────────┬──────────────┘  → books_cleaned.csv
+│  1. Data Cleaning       │  Filter short descriptions, normalise fields
+└──────────┬──────────────┘
            │
            ▼
 ┌─────────────────────────┐
-│  2. Text Classification │  Map Google Books categories to simple
-│     Fiction / Nonfiction│  ones; facebook/bart-large-mnli (zero-shot)
-│                         │  fills in the rest → books_with_categories.csv
+│  2. Text Classification │  facebook/bart-large-mnli (zero-shot)
+│     Fiction / Nonfiction│  → books_with_categories.csv
 └──────────┬──────────────┘
            │
            ▼
 ┌─────────────────────────┐
 │  3. Emotion Analysis    │  j-hartmann/emotion-english-distilroberta-base
-│  joy·sadness·fear·      │  Max score per emotion across sentences
-│  anger·surprise·…       │  → books_with_emotions.csv
+│  anger·joy·fear·sadness │  → books_with_emotions.csv
 └──────────┬──────────────┘
            │
            ▼
 ┌─────────────────────────┐
-│  4. Vector Embeddings   │  ISBN-tagged descriptions →
-│                         │  all-MiniLM-L6-v2 → ChromaDB
+│  4. Vector Embeddings   │  all-MiniLM-L6-v2 → ChromaDB
 └──────────┬──────────────┘
            │
            ▼
@@ -86,16 +82,18 @@ book-recommender/
 ├── 🚀 App
 │   └── gradio-dashboard.py          ← Main app entry point
 │
-├── 🖼️ Assets
-│   ├── cover-not-found.jpg          ← Fallback cover image
-│   └── tagged_description.txt       ← ISBN-tagged descriptions for the vector store
+├── �️ Assets
+│   └── cover-not-found.jpg          ← Fallback cover image
 │
 ├── 📄 Documentation
 │   ├── README.md                    ← Project overview and setup steps
 │   └── requirements.txt             ← Python dependencies
 │
-├── .gitignore                       ← Ignores secrets, caches and generated CSVs
-└── .env                             ← Local API keys (create yourself, never commit!)
+├── 🔐 Config
+│   └── .env.example                 ← Sample environment variables
+│
+├── .gitignore                       ← Ignore local caches and generated artifacts
+└── .env                             ← Local API keys (never commit this!)
 ```
 
 ---
@@ -106,7 +104,7 @@ book-recommender/
 |-------|--------|------|
 | `all-MiniLM-L6-v2` | sentence-transformers | Semantic embeddings for vector search |
 | `facebook/bart-large-mnli` | Meta AI | Zero-shot Fiction / Nonfiction classification |
-| `j-hartmann/emotion-english-distilroberta-base` | Jochen Hartmann | Emotion scoring across 7 emotions (anger, disgust, fear, joy, sadness, surprise, neutral) |
+| `j-hartmann/emotion-english-distilroberta-base` | Jochen Hartmann | Emotion scoring across 7 emotions |
 
 ---
 
@@ -115,11 +113,8 @@ book-recommender/
 ### 1 — Clone & install
 
 ```bash
-git clone https://github.com/umarjaved204/semantic-book-recommender.git
-cd semantic-book-recommender
-python -m venv .venv
-.venv\Scripts\activate        # Windows
-# source .venv/bin/activate   # macOS / Linux
+git clone https://github.com/your-username/book-recommender.git
+cd book-recommender
 pip install -r requirements.txt
 ```
 
@@ -132,24 +127,18 @@ HF_TOKEN=your_huggingface_token_here
 HF_HUB_DISABLE_XET=1
 ```
 
-> Get your free token at [huggingface.co/settings/tokens](https://huggingface.co/settings/tokens).  
-> All models used are public, so the token is optional — it just avoids Hugging Face rate limits.
+> Get your free token at [huggingface.co/settings/tokens](https://huggingface.co/settings/tokens)
 
 ### 3 — Run the notebooks in order
 
 | # | Notebook | Output |
 |---|----------|--------|
-| # | Notebook | Reads | Output |
-|---|----------|-------|--------|
-| 1 | `data-exploration.ipynb` | Kaggle dataset (auto-downloaded) | `books_cleaned.csv` |
-| 2 | `text-classification.ipynb` | `books_cleaned.csv` | `books_with_categories.csv` |
-| 3 | `sentiment-analysis.ipynb` | `books_with_categories.csv` | `books_with_emotions.csv` |
-| 4 | `vector-search.ipynb` | `books_cleaned.csv` | `tagged_description.txt` *(optional — already included in the repo)* |
+| 1 | `data-exploration.ipynb` | `books_cleaned.csv` |
+| 2 | `text-classification.ipynb` | `books_with_categories.csv` |
+| 3 | `sentiment-analysis.ipynb` | `books_with_emotions.csv` |
+| 4 | `vector-search.ipynb` | `tagged_description.txt` |
 
-The generated CSVs are git-ignored, so notebooks 1–3 must be run at least once before launching the app.
-
-> **GPU recommended** for notebooks 2 and 3 — they run large transformer models with `device=0` (CUDA).  
-> On a CPU-only machine, change `device=0` to `device=-1` in the `pipeline(...)` calls (expect long run times).  
+> **GPU recommended** for notebooks 2 and 3 — they run large transformer models.  
 > The Gradio app itself runs fine on CPU.
 
 ### 4 — Launch the app
@@ -159,8 +148,6 @@ python gradio-dashboard.py
 ```
 
 Open [http://localhost:7860](http://localhost:7860) in your browser. 🎉
-
-> On startup the app embeds all ~5,200 descriptions into an in-memory ChromaDB store, so the first launch (which also downloads the embedding model) can take a few minutes.
 
 ---
 
@@ -180,7 +167,7 @@ Open [http://localhost:7860](http://localhost:7860) in your browser. 🎉
 
 ## 📄 Dataset
 
-[**7k Books with Metadata**](https://www.kaggle.com/datasets/dylanjcastillo/7k-books-with-metadata) by Dylan Castillo — ~6,810 books with titles, authors, descriptions, ratings, and cover thumbnails sourced from Google Books. About 5,200 remain after cleaning.
+[**7k Books with Metadata**](https://www.kaggle.com/datasets/dylanjcastillo/7k-books-with-metadata) by Dylan Castillo — ~6,810 books with titles, authors, descriptions, ratings, and cover thumbnails sourced from Google Books.
 
 ---
 
